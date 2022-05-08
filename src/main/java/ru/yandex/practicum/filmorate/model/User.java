@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.Email;
-import javax.validation.constraints.Future;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 import javax.validation.constraints.Pattern;
 import java.time.LocalDate;
@@ -21,6 +21,7 @@ public class User {
     private String email;
 
     @EqualsAndHashCode.Include
+    @NotNull
     @Pattern(regexp = "^[A-Za-z0-9]+$")
     private String login;
 

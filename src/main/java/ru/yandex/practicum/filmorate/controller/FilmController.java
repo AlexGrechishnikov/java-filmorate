@@ -1,7 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import ru.yandex.practicum.filmorate.exception.AlreadyExistsException;
 import ru.yandex.practicum.filmorate.exception.CustomValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -28,8 +31,10 @@ public class FilmController {
         checkFilm(newFilm);
         if (films.add(newFilm)) {
             return newFilm;
+        } else {
+            AlreadyExistsException ex = new AlreadyExistsException(newFilm);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
         }
-        return null;
     }
 
     @PutMapping
