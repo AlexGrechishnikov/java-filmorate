@@ -49,8 +49,8 @@ class FilmControllerTest {
         Film wrongReleaseFilm = new Film(3L, "film", "veryLongDescription",
                 LocalDate.of(1888, Month.AUGUST, 1), 100);
 
-        final CustomValidationException exception =
-                assertThrows(CustomValidationException.class, () -> filmController.addFilm(wrongReleaseFilm));
+        final ResponseStatusException exception =
+                assertThrows(ResponseStatusException.class, () -> filmController.addFilm(wrongReleaseFilm));
 
         assertTrue(exception.getMessage().contains("Ошибочная дата релиза"));
     }
@@ -60,8 +60,8 @@ class FilmControllerTest {
         Film wrongDurationFilm = new Film(3L, "film", "veryLongDescription",
                 LocalDate.of(1988, Month.AUGUST, 1), -100);
 
-        final CustomValidationException exception =
-                assertThrows(CustomValidationException.class, () -> filmController.addFilm(wrongDurationFilm));
+        final ResponseStatusException exception =
+                assertThrows(ResponseStatusException.class, () -> filmController.addFilm(wrongDurationFilm));
 
         assertTrue(exception.getMessage().contains("Длительность фильма не может быть отрицательной"));
     }
