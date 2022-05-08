@@ -27,19 +27,21 @@ public class UserController {
     public User addUser(@Valid @RequestBody User newUser) {
         checkUser(newUser);
         if (users.add(newUser)) {
+            log.info("Добавлен пользователь: {}", newUser);
             return newUser;
         } else {
             AlreadyExistsException ex = new AlreadyExistsException(newUser);
+            log.debug(ex.getMessage(), ex);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
         }
     }
-
 
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
         users.remove(user);
         checkUser(user);
         users.add(user);
+        log.info("Обновлён пользователь: {}", user);
         return user;
     }
 

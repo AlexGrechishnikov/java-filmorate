@@ -30,9 +30,11 @@ public class FilmController {
     public Film addFilm(@Valid @RequestBody Film newFilm) {
         checkFilm(newFilm);
         if (films.add(newFilm)) {
+            log.info("Добавлен фильм: {}", newFilm);
             return newFilm;
         } else {
             AlreadyExistsException ex = new AlreadyExistsException(newFilm);
+            log.debug(ex.getMessage(), ex);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
         }
     }
@@ -42,18 +44,24 @@ public class FilmController {
         checkFilm(updateFilm);
         films.remove(updateFilm);
         films.add(updateFilm);
+        log.info("Обновлён фильм: {}", updateFilm);
         return updateFilm;
     }
 
     private void checkFilm(Film film) {
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28))) {
-            throw new CustomValidationException(
-                    String.format("Ошибочная дата релиза: %s",
-                            film.getReleaseDate().toString()));
+            CustomValidationException ex =
+                    new CustomValidationException(
+                            String.format("Ошибочная дата релиза: %s", film.getReleaseDate().toString()));
+            log.debug(ex.getMessage(), ex);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
         }
 
         if (film.getDuration().isNegative()) {
-            throw new CustomValidationException("Длительность фильма не может быть отрицательной");
+            CustomValidationException ex =
+                    new CustomValidationException("Длительность фильма не может быть отрицательной");
+            log.debug(ex.getMessage(), ex);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
         }
     }
 }

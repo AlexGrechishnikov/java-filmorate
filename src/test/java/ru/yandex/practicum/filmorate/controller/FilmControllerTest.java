@@ -4,17 +4,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.server.ResponseStatusException;
-import ru.yandex.practicum.filmorate.exception.AlreadyExistsException;
 import ru.yandex.practicum.filmorate.exception.CustomValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Month;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
 
@@ -96,12 +93,12 @@ class FilmControllerTest {
 
         Film filmFromController = filmController.updateFilm(film);
 
-        assertEquals(film,filmFromController, "Фильмы должны быть одинаковы");
+        assertEquals(film, filmFromController, "Фильмы должны быть одинаковы");
 
         filmFromController.setName("Измененное имя");
         Film secondUpdateFilm = filmController.updateFilm(filmFromController);
 
-        assertEquals(film,secondUpdateFilm, "Фильмы должны быть одинаковы");
+        assertEquals(film, secondUpdateFilm, "Фильмы должны быть одинаковы");
     }
 
     @Test
