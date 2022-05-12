@@ -1,14 +1,18 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.*;
-import java.time.Duration;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Film {
+
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotEmpty(message = "Название фильма не должно быть пустым")
@@ -21,13 +25,15 @@ public class Film {
     @Past
     private LocalDate releaseDate;
 
-    private Duration duration;
+    private Integer duration;
 
-    public Film(Long id, String name, String description, LocalDate releaseDate, int duration) {
+    private Set<Long> likesIds = new HashSet<>();
+
+    public Film(Long id, String name, String description, LocalDate releaseDate, Integer duration) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
-        this.duration = Duration.of(duration, ChronoUnit.MINUTES);
+        this.duration = duration;
     }
 }

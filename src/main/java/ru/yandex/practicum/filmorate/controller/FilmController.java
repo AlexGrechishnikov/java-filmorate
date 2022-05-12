@@ -2,14 +2,11 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.AlreadyExistsException;
-import ru.yandex.practicum.filmorate.exception.CustomValidationException;
+import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
-import java.time.Month;
-import java.util.HashSet;
 import java.util.List;
 
 @Slf4j
@@ -17,49 +14,47 @@ import java.util.List;
 @RequestMapping("/films")
 public class FilmController {
 
-    private final HashSet<Film> films = new HashSet<>();
+    private final FilmService filmService;
+
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
 
     @GetMapping
-    public List<Film> getAllFilms() {
-        return List.copyOf(films);
+    public List<Film> findAllFilms() {
+        return filmService.findAllFilms();
+    }
+
+    @GetMapping("/{id}")
+    public Film findFilmById(@PathVariable Long id) {
+        return filmService.findFilmById(id);
     }
 
     @PostMapping
-    public Film addFilm(@Valid @RequestBody Film newFilm) {
-        checkFilm(newFilm);
-        if (films.add(newFilm)) {
-            log.info("Добавлен фильм: {}", newFilm);
-            return newFilm;
-        } else {
-            AlreadyExistsException ex = new AlreadyExistsException(newFilm);
-            log.debug(ex.getMessage(), ex);
-            throw ex;
-        }
+    public Film createFilm(@Valid @RequestBody Film film) {
+        return filmService.createFilm(film);
     }
 
     @PutMapping
-    public Film updateFilm(@Valid @RequestBody Film updateFilm) {
-        checkFilm(updateFilm);
-        films.remove(updateFilm);
-        films.add(updateFilm);
-        log.info("Обновлён фильм: {}", updateFilm);
-        return updateFilm;
+    public Film updateFilm(@Valid @RequestBody Film film) {
+        return filmService.updateFilm(film);
     }
 
-    private void checkFilm(Film film) {
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28))) {
-            CustomValidationException ex =
-                    new CustomValidationException(
-                            String.format("Ошибочная дата релиза: %s", film.getReleaseDate().toString()));
-            log.debug(ex.getMessage(), ex);
-            throw ex;
-        }
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.addLike(id, userId);
+    }
 
-        if (film.getDuration().isNegative()) {
-            CustomValidationException ex =
-                    new CustomValidationException("Длительность фильма не может быть отрицательной");
-            log.debug(ex.getMessage(), ex);
-            throw ex;
+    @DeleteMapping("/{id}/like/{userId}")
+    public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.removeLike(id, userId);
+    }
+
+    @GetMapping("/popular")
+    public List<Film> findMostLikedFilms(@RequestParam(defaultValue = "10") Long count) {
+        if (count < 0) {
+            throw new IncorrectParameterException("count");
         }
+        return filmService.findMostPopularFilms(count);
     }
 }
