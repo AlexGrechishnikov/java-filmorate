@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class FilmService {
+    private static final LocalDate BIRTHDAY_OF_CINEMA = LocalDate.of(1895, Month.DECEMBER, 28);
+
     private final FilmStorage filmStorage;
     private final UserService userService;
 
@@ -37,7 +39,7 @@ public class FilmService {
     }
 
     private void checkFilm(Film film) {
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28))) {
+        if (film.getReleaseDate().isBefore(BIRTHDAY_OF_CINEMA)) {
             throw new CustomValidationException(
                     String.format("Ошибочная дата релиза: %s", film.getReleaseDate().toString()));
         }
