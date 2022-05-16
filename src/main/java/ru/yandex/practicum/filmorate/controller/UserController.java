@@ -2,11 +2,10 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.AlreadyExistsException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
-import java.util.HashSet;
 import java.util.List;
 
 @Slf4j
@@ -14,38 +13,49 @@ import java.util.List;
 @RequestMapping("/users")
 public class UserController {
 
-    private final HashSet<User> users = new HashSet<>();
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public List<User> getAllUsers() {
-        return List.copyOf(users);
+        return userService.findAllUsers();
+    }
+
+    @GetMapping("/{id}")
+    public User findUserById(@PathVariable Long id) {
+        return userService.findUserById(id);
     }
 
     @PostMapping
-    public User addUser(@Valid @RequestBody User newUser) {
-        checkUser(newUser);
-        if (users.add(newUser)) {
-            log.info("Добавлен пользователь: {}", newUser);
-            return newUser;
-        } else {
-            AlreadyExistsException ex = new AlreadyExistsException(newUser);
-            log.debug(ex.getMessage(), ex);
-            throw ex;
-        }
+    public User addUser(@Valid @RequestBody User user) {
+        return userService.createUser(user);
     }
 
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
-        users.remove(user);
-        checkUser(user);
-        users.add(user);
-        log.info("Обновлён пользователь: {}", user);
-        return user;
+        return userService.updateUser(user);
     }
 
-    private void checkUser(User newUser) {
-        if (newUser.getName() == null || newUser.getName().isBlank()) {
-            newUser.setName(newUser.getLogin());
-        }
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        userService.addFriend(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        userService.removeFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> findUsersFriends(@PathVariable Long id) {
+        return userService.findUserFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> findUsersCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
+        return userService.findUsersCommonFriends(id, otherId);
     }
 }

@@ -3,8 +3,10 @@ package ru.yandex.practicum.filmorate.controller;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.server.ResponseStatusException;
+import ru.yandex.practicum.filmorate.exception.AlreadyExistsException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.inMemoryUserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -19,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class UserControllerTest {
 
-    private UserController userController;
+    private UserService userService;
     private static Validator validator;
 
     @BeforeAll
@@ -29,7 +31,7 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        userController = new UserController();
+        userService = new UserService(new inMemoryUserStorage());
     }
 
     @Test
@@ -38,8 +40,8 @@ class UserControllerTest {
                 "Ivan", LocalDate.of(2000, Month.FEBRUARY, 23));
         List<User> users = List.of(user);
 
-        userController.addUser(user);
-        List<User> allUsersFromController = userController.getAllUsers();
+        userService.createUser(user);
+        List<User> allUsersFromController = userService.findAllUsers();
 
         assertEquals(users, allUsersFromController, "Списки должны быть одинаковыми");
     }
@@ -51,10 +53,10 @@ class UserControllerTest {
         User secondUser = new User(2L, "u12ser@mail.ru", "user",
                 "Fedor", LocalDate.of(2010, Month.FEBRUARY, 23));
 
-        userController.addUser(firstUser);
-        ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> userController.addUser(secondUser));
-        assertTrue(ex.getMessage().contains("is already exists"));
+        userService.createUser(firstUser);
+        AlreadyExistsException ex =
+                assertThrows(AlreadyExistsException.class, () -> userService.createUser(secondUser));
+        assertTrue(ex.getMessage().contains("уже существует"));
     }
 
     @Test
@@ -62,10 +64,10 @@ class UserControllerTest {
         User user = new User(1L, "user@mail.ru", "user",
                 "", LocalDate.of(2000, Month.FEBRUARY, 23));
 
-        User userFromController = userController.updateUser(user);
+        User userFromController = userService.updateUser(user);
         userFromController.setEmail("ivan@mail.ru");
-        User updateUser = userController.updateUser(userFromController);
-        List<User> userControllerAllUsers = userController.getAllUsers();
+        User updateUser = userService.updateUser(userFromController);
+        List<User> userControllerAllUsers = userService.findAllUsers();
 
         assertEquals(user, updateUser);
         assertEquals(updateUser.getEmail(), "ivan@mail.ru");
@@ -131,7 +133,7 @@ class UserControllerTest {
         User user = new User(1L, "user@mail.ru", "user",
                 "", LocalDate.of(2000, Month.FEBRUARY, 23));
 
-        User userFromController = userController.addUser(user);
+        User userFromController = userService.createUser(user);
 
         assertEquals("user", userFromController.getName());
     }

@@ -3,9 +3,13 @@ package ru.yandex.practicum.filmorate.controller;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.server.ResponseStatusException;
+import ru.yandex.practicum.filmorate.exception.AlreadyExistsException;
 import ru.yandex.practicum.filmorate.exception.CustomValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.inMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.inMemoryUserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -19,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FilmControllerTest {
 
-    private FilmController filmController;
+    private FilmService filmService;
     private static Validator validator;
 
     @BeforeAll
@@ -29,7 +33,8 @@ class FilmControllerTest {
 
     @BeforeEach
     void setUp() {
-        filmController = new FilmController();
+        filmService = new FilmService(new inMemoryFilmStorage(),
+                new UserService(new inMemoryUserStorage()));
     }
 
     @Test
@@ -38,8 +43,8 @@ class FilmControllerTest {
                 LocalDate.of(2000, Month.AUGUST, 1), 100);
         List<Film> films = List.of(film);
 
-        filmController.addFilm(film);
-        List<Film> allFilmsFromController = filmController.getAllFilms();
+        filmService.createFilm(film);
+        List<Film> allFilmsFromController = filmService.findAllFilms();
 
         assertEquals(films, allFilmsFromController, "Возвращаемый список фильмов из контроллера отличатся");
     }
@@ -49,8 +54,8 @@ class FilmControllerTest {
         Film wrongReleaseFilm = new Film(3L, "film", "veryLongDescription",
                 LocalDate.of(1888, Month.AUGUST, 1), 100);
 
-        final ResponseStatusException exception =
-                assertThrows(ResponseStatusException.class, () -> filmController.addFilm(wrongReleaseFilm));
+        final CustomValidationException exception =
+                assertThrows(CustomValidationException.class, () -> filmService.createFilm(wrongReleaseFilm));
 
         assertTrue(exception.getMessage().contains("Ошибочная дата релиза"));
     }
@@ -60,8 +65,8 @@ class FilmControllerTest {
         Film wrongDurationFilm = new Film(3L, "film", "veryLongDescription",
                 LocalDate.of(1988, Month.AUGUST, 1), -100);
 
-        final ResponseStatusException exception =
-                assertThrows(ResponseStatusException.class, () -> filmController.addFilm(wrongDurationFilm));
+        final CustomValidationException exception =
+                assertThrows(CustomValidationException.class, () -> filmService.createFilm(wrongDurationFilm));
 
         assertTrue(exception.getMessage().contains("Длительность фильма не может быть отрицательной"));
     }
@@ -91,12 +96,12 @@ class FilmControllerTest {
         Film film = new Film(1L, "name", "descr",
                 LocalDate.of(2000, Month.AUGUST, 1), 100);
 
-        Film filmFromController = filmController.updateFilm(film);
+        Film filmFromController = filmService.updateFilm(film);
 
         assertEquals(film, filmFromController, "Фильмы должны быть одинаковы");
 
         filmFromController.setName("Измененное имя");
-        Film secondUpdateFilm = filmController.updateFilm(filmFromController);
+        Film secondUpdateFilm = filmService.updateFilm(filmFromController);
 
         assertEquals(film, secondUpdateFilm, "Фильмы должны быть одинаковы");
     }
@@ -105,13 +110,13 @@ class FilmControllerTest {
     void exFromPOSTForTwoIdenticalFilms() {
         Film firstFilm = new Film(1L, "name", "descr",
                 LocalDate.of(2000, Month.AUGUST, 1), 100);
-        Film secondFilm = new Film(1L, "name", "descr",
-                LocalDate.of(2000, Month.AUGUST, 1), 100);
+        Film secondFilm = filmService.createFilm(firstFilm);
 
-        filmController.addFilm(firstFilm);
-        ResponseStatusException exception =
-                assertThrows(ResponseStatusException.class, () -> filmController.addFilm(secondFilm));
+        assertEquals(firstFilm, secondFilm, "Фильмы должны быть одинаковы");
 
-        assertTrue(exception.getMessage().contains("is already exists"));
+        AlreadyExistsException exception =
+                assertThrows(AlreadyExistsException.class, () -> filmService.createFilm(secondFilm));
+
+        assertTrue(exception.getMessage().contains("уже существует"));
     }
 }
